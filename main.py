@@ -9,6 +9,7 @@ from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.responses import RedirectResponse
 
 app = FastAPI()
 
@@ -26,7 +27,10 @@ async def root(request: Request):
 
 @app.get("/{short_url}")
 async def short_url_handler(short_url: str):
-    return {"message": f"{short_url}"}
+    async with aiofiles.open("urls.JSON", mode="r") as f:
+        urls_data = json.loads(await f.read())
+    longurl = urls_data.get(short_url)
+    return RedirectResponse(longurl)
 
 
 @app.post("/")
