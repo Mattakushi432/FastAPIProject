@@ -1,5 +1,10 @@
+import string
+from random import choice
 from typing import Annotated
 import os
+
+import aiofiles
+import json
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -21,9 +26,19 @@ async def root(request: Request):
 
 @app.get("/{short_url}")
 async def short_url_handler(short_url: str):
-    return {"message": f"Hello {short_url}"}
+    return {"message": f"{short_url}"}
 
 
-@app.post("/login/")
+@app.post("/")
 async def create_url(longurl: Annotated[str, Form()]):
-    return {"username": longurl}
+    alphabet = string.ascii_letters + string.digits
+    short_url = ''.join(choice(alphabet) for _ in range(6))
+
+    async with aiofiles.open("urls.JSON", mode="r") as f:
+        urls_data = json.loads(await f.read())
+
+    urls_data[short_url] = longurl
+
+    async with aiofiles.open("urls.JSON", mode="w") as f:
+        await f.write(json.dumps(urls_data, indent=4))
+    return {"short_url": short_url, "longurl": longurl}
