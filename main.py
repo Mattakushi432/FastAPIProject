@@ -20,7 +20,8 @@ if os.path.isdir("static"):
 
 
 def render_template(template_name: str, request: Request, short_url_code: Optional[str] = None):
-    return templates.TemplateResponse(template_name, {"request": request, "short_url_code": short_url_code})
+    return templates.TemplateResponse(template_name, {"request": request,
+                                                      "short_url_code": short_url_code})
 
 
 @app.get("/", response_class=HTMLResponse, name="root")
