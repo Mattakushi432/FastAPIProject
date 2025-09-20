@@ -1,23 +1,70 @@
 import string
+
 from random import choice
-from typing import Annotated, Optional
-import os
+from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Annotated, Optional, Dict
+
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 import aiofiles
 import json
-from fastapi import FastAPI, Form, Request
+from fastapi import FastAPI, Form, Request, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
-from starlette.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
-app = FastAPI()
+
+class Settings(BaseSettings):
+    MONGO_USER: str = ""
+    MONGO_PASSWORD: str = ""
+    MONGO_HOST: str = "localhost"
+    MONGO_PORT: int = 27017
+    MONGO_DB_NAME: str = "test"
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+
+def build_mongo_uri(s: "Settings") -> str:
+    auth = f"{s.MONGO_USER}:{s.MONGO_PASSWORD}@" if s.MONGO_USER and s.MONGO_PASSWORD else ""
+    return f"mongodb://{auth}{s.MONGO_HOST}:{s.MONGO_PORT}"
+
+
+settings = Settings()
+MONGO_URI = build_mongo_uri(settings)
+
+BASE_DIR = Path(__file__).resolve().parent
+SHORT_URLS_LENGTH = 6
+ALPHABET = string.ascii_letters + string.digits
+
+db_state: Dict[str, AsyncIOMotorClient | AsyncIOMotorDatabase] = {}
+
+def generate_short_code(length: int = SHORT_URLS_LENGTH, alphabet: str = ALPHABET) -> str:
+    return ''.join(choice(alphabet) for _ in range(length))
+
+
+class URLMapping(BaseModel):
+    long_url: str
+    short_code: str = Field(default_factory=generate_short_code)
+    visits: int = 0
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    db_state["client"] = AsyncIOMotorClient(MONGO_URI)
+    db_state["database"] = db_state["client"][settings.MONGO_DB_NAME]
+    yield
+    db_state["client"].close()
+    print("MongoDB connection closed")
+
+app = FastAPI(title="URL Shorten with MongoDB", lifespan=lifespan)
+
+statick_dir = BASE_DIR / "static"
+if statick_dir.is_dir():
+    app.mount("/static", StaticFiles(directory="static_dir"), name="static")
 
 templates = Jinja2Templates(directory="templates")
-
-if os.path.isdir("static"):
-    app.mount("/static", StaticFiles(directory="static"), name="static")
-
 
 def render_template(template_name: str, request: Request, short_url_code: Optional[str] = None):
     return templates.TemplateResponse(template_name, {"request": request,
