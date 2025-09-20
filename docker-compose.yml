@@ -12,6 +12,8 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: 11111111
     volumes:
       - mongo-data:/data/db
+    networks:
+      - app_net
 
   app:
     build: .
@@ -25,6 +27,14 @@ services:
       - .:/app
     depends_on:
       - mongo
+    networks:
+      - app_net
 
 volumes:
   mongo-data:
+
+networks:
+  app_net:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"

@@ -16,18 +16,20 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 
 class Settings(BaseSettings):
-    MONGO_USER: str = ""
+    MONGO_USERNAME: str = ""
     MONGO_PASSWORD: str = ""
     MONGO_HOST: str = "localhost"
     MONGO_PORT: int = 27017
     MONGO_DB_NAME: str = "test"
+    MONGO_AUTH_SOURCE: str = "admin"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 def build_mongo_uri(s: Settings) -> str:
-    auth = f"{s.MONGO_USER}:{s.MONGO_PASSWORD}@" if s.MONGO_USER and s.MONGO_PASSWORD else ""
-    return f"mongodb://{auth}{s.MONGO_HOST}:{s.MONGO_PORT}"
+    if s.MONGO_USERNAME and s.MONGO_PASSWORD:
+        return f"mongodb://{s.MONGO_USERNAME}:{s.MONGO_PASSWORD}@{s.MONGO_HOST}:{s.MONGO_PORT}/?authSource={s.MONGO_AUTH_SOURCE}"
+    return f"mongodb://{s.MONGO_HOST}:{s.MONGO_PORT}"
 
 
 settings = Settings()
@@ -35,7 +37,7 @@ MONGO_URI = build_mongo_uri(settings)
 
 BASE_DIR = Path(__file__).resolve().parent
 SHORT_URLS_LENGTH = 6
-ALPHABET = string.ascii_letters + string.digits
+ALPHABET = string.ascii_uppercase + string.digits
 
 db_state: Dict[str, AsyncIOMotorClient | AsyncIOMotorDatabase] = {}
 
