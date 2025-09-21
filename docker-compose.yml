@@ -12,29 +12,32 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: 11111111
     volumes:
       - mongo-data:/data/db
-    networks:
-      - app_net
 
   app:
     build: .
     container_name: url_shortener_app
     restart: always
     ports:
-      - "8081:8081"
+      - "8000:8000"
     env_file:
       - .env
     volumes:
       - .:/app
     depends_on:
       - mongo
-    networks:
-      - app_net
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo_express_ui
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_USERNAME: root
+      ME_CONFIG_MONGODB_PASSWORD: 11111111
+
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MONGO_PORT}/?authSource=${MONGO_AUTH_SOURCE}
+    depends_on:
+      - mongo
 
 volumes:
   mongo-data:
-
-networks:
-  app_net:
-    driver: bridge
-    driver_opts:
-      com.docker.network.enable_ipv6: "false"
