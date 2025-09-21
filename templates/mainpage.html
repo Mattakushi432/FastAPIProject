@@ -7,6 +7,7 @@
     <style>
         body { font-family: sans-serif; display: grid; place-items: center; min-height: 80vh; background: #f4f4f4; }
         .container { background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+        .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; clip: rect(0 0 0 0); overflow: hidden; white-space: nowrap; }
         input[type="url"] { width: 400px; padding: 10px; font-size: 1rem; margin-right: 5px; }
         button { padding: 10px 15px; font-size: 1rem; background: #007bff; color: white; border: none; cursor: pointer; }
         .result { margin-top: 20px; background: #eef; padding: 10px; }
@@ -16,19 +17,20 @@
 <body>
     <div class="container">
         <h1>URL Shortener</h1>
+        <!--suppress HtmlUnknownTarget -->
         <form action="{{ request.url_for('shorten') }}" method="post">
-            <input type="url" name="longurl" placeholder="Enter your long URL here" required>
+            <label for="longurl" class="visually-hidden">Long URL</label>
+            <input id="longurl" type="url" name="longurl" placeholder="Enter your long URL here" required>
             <button type="submit">Shorten</button>
         </form>
 
-        {% if short_url %}
         <div class="result">
             <p>Your short link:</p>
-            <a href="{{ request.url_for('redirect_to_url', short_code=short_url) }}" target="_blank">
+            <!--suppress HtmlUnknownTarget -->
+            <a href="{{ request.url_for('redirect_to_url', short_code=short_url) }}" target="_blank" rel="noopener noreferrer">
                 {{ request.base_url }}{{ short_url }}
             </a>
         </div>
-        {% endif %}
     </div>
 </body>
 </html>
