@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   mongo:
     image: mongo:latest
@@ -35,7 +33,6 @@ services:
     env_file: .env
     environment:
       ME_CONFIG_MONGODB_URL: "mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MONGO_PORT}/?authSource=${MONGO_AUTH_SOURCE}"
-
       ME_CONFIG_BASICAUTH_USERNAME: ${ME_USERNAME}
       ME_CONFIG_BASICAUTH_PASSWORD: ${ME_PASSWORD}
     depends_on:
