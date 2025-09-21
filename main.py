@@ -100,7 +100,10 @@ async def create_url(request: Request, longurl: str = Form(...)) -> RedirectResp
 @app.get("/{short_code}", name="redirect_to_url")
 async def short_url_handler(short_code: str) -> RedirectResponse:
     db = db_state["database"]
-    document = await db.urls.find_one({"short_code": short_code})
+    document = await db.urls.find_one_and_update(
+        {"short_code": short_code},
+        {"$inc": {"visits": 1}}
+    )
     if not document:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
