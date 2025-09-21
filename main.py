@@ -86,9 +86,9 @@ async def root(request: Request, short_url: Optional[str] = None) -> HTMLRespons
 @app.post("/", name="shorten")
 async def create_url(request: Request, longurl: str = Form(...)) -> RedirectResponse:
     db = db_state["database"]
-    exsisting_mapping = await db.urls.find_one({"long_url": longurl})
-    if exsisting_mapping:
-        short_url_code = exsisting_mapping["short_code"]
+    existing_mapping = await db.urls.find_one({"long_url": longurl})
+    if existing_mapping:
+        short_url_code = existing_mapping["short_code"]
     else:
         short_url_code = await generate_unique_short_code()
         new_mapping = URLMapping(long_url=longurl, short_code=short_url_code)
