@@ -8,8 +8,8 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: 11111111
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - mongo-data:/data/db
 
@@ -28,14 +28,16 @@ services:
 
   mongo-express:
     image: mongo-express:latest
-    container_name: mongo_express_ui
+    container_name: mongo-express-ui
+    restart: always
     ports:
       - "8081:8081"
+    env_file: .env
     environment:
-      ME_CONFIG_MONGODB_USERNAME: root
-      ME_CONFIG_MONGODB_PASSWORD: 11111111
+      ME_CONFIG_MONGODB_URL: "mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MONGO_PORT}/?authSource=${MONGO_AUTH_SOURCE}"
 
-      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MONGO_PORT}/?authSource=${MONGO_AUTH_SOURCE}
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_PASSWORD}
     depends_on:
       - mongo
 
